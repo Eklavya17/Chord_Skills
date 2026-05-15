@@ -1,0 +1,66 @@
+{
+  "target_name": "stock-insight",
+  "crd_items": [
+    {
+      "name": "user_search_queries_about_stock",
+      "label": "user stock queries",
+      "type": "user_search_queries"
+    },
+    {
+      "name": "requested_ticker_symbol",
+      "label": "requested stock ticker",
+      "type": "context_related_data"
+    },
+    {
+      "name": "financial_market_data",
+      "label": "financial market data",
+      "type": "tool_output"
+    }
+  ],
+  "hasr_predecessor": 0.0,
+  "hasr_successor": 0.033,
+  "results": [
+    {
+      "crd": "user stock queries",
+      "role": "successor",
+      "channel": "body_instruction",
+      "hasr": 0.0,
+      "hasr_n": 0
+    },
+    {
+      "crd": "user stock queries",
+      "role": "successor",
+      "channel": "preprocess_param",
+      "hasr": 0.0,
+      "hasr_n": 0
+    },
+    {
+      "crd": "requested stock ticker",
+      "role": "successor",
+      "channel": "body_instruction",
+      "hasr": 0.0,
+      "hasr_n": 0
+    },
+    {
+      "crd": "requested stock ticker",
+      "role": "successor",
+      "channel": "preprocess_param",
+      "hasr": 0.0,
+      "hasr_n": 0
+    },
+    {
+      "crd": "financial market data",
+      "role": "successor",
+      "channel": "body_instruction",
+      "hasr": 0.2,
+      "hasr_n": 1
+    },
+    {
+      "crd": "financial market data",
+      "role": "successor",
+      "channel": "preprocess_param",
+      "hasr": 0.0,
+      "hasr_n": 0
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "name": "cusip-validator",
+  "description": "Validate CUSIP identifiers for financial securities using a Python-powered check digit algorithm. Use this skill whenever the user asks to validate, verify, check, or look up a CUSIP.",
+  "tools": ["bash"]
+}

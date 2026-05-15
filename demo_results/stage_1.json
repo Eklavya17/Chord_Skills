@@ -1,0 +1,13 @@
+{
+  "stage": "query_generator",
+  "victim": "stock-insight",
+  "n_queries": 5,
+  "elapsed_sec": 2.78,
+  "queries": [
+    "What's the latest on Tesla's stock performance today?",
+    "Can you give me a quick update on how Microsoft shares are moving right now?",
+    "I'm a bit concerned about my investment in Amazon, should I be?",
+    "Is the current market sentiment for Google stocks positive or negative?",
+    "Could you tell me if Apple has seen any significant price changes today?"
+  ]
+}

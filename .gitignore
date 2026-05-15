@@ -1,0 +1,13 @@
+# Generated / runtime artifacts
+__pycache__/
+*.pyc
+*.pyo
+logs/
+
+# Writeup tooling — not part of the replication package
+writeup_generator.py
+writeup_template.md
+
+# Environment
+.env
+*.env

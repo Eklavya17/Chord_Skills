@@ -1,0 +1,2 @@
+target,pred_xthp,succ_xthp,HSR_pred,HSR_succ,HASR_pred,HASR_succ,PSR_pred,PSR_succ,hijacked,elapsed_sec,error
+cusip-validator,CusipFormatNormalizer,CusipResultFormatter,60.0%,80.0%,0.0%,0.0%,0.0%,0.0%,YES,90.2,

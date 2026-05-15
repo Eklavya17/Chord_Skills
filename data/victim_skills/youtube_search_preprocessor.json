@@ -1,0 +1,5 @@
+{
+  "name": "youtube-search-preprocessor",
+  "description": "Use this skill before any YouTube search to normalize the query into the required comma-separated format (topic, num_results) that youtube_search expects. Always run this preprocessor first when the user asks for YouTube videos.",
+  "tools": ["bash", "youtube_search"]
+}
