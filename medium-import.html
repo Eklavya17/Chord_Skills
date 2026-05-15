@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chord_Skills: XTHP at the Skill Layer</title>
+  <meta name="description" content="A Medium-importable article about extending Chord/XTHP from LLM agent tools to skill-based AI systems.">
+  <meta name="author" content="Eklavya Tyagi">
+  <style>
+    body{margin:0;font-family:Georgia,'Times New Roman',serif;color:#242424;background:#fff;line-height:1.65;font-size:20px}
+    main{max-width:760px;margin:56px auto;padding:0 20px 80px}
+    h1,h2,h3{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;line-height:1.2;color:#111}
+    h1{font-size:44px;margin:0 0 12px;letter-spacing:-.03em}
+    h2{font-size:30px;margin-top:48px;margin-bottom:12px;letter-spacing:-.02em}
+    h3{font-size:23px;margin-top:30px;margin-bottom:8px}
+    .subtitle{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:22px;color:#555;margin:0 0 24px}
+    .byline{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:15px;color:#777;margin-bottom:44px}
+    p{margin:0 0 22px} a{color:#1a8917;text-decoration:underline;text-underline-offset:3px}
+    blockquote{margin:34px 0;padding-left:22px;border-left:4px solid #242424;color:#333;font-style:italic}
+    ul,ol{padding-left:28px;margin-top:0;margin-bottom:26px} li{margin-bottom:10px}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;background:#f5f5f5;padding:2px 5px;border-radius:4px}
+    table{width:100%;border-collapse:collapse;margin:28px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px}
+    th,td{border-bottom:1px solid #ddd;padding:10px 8px;text-align:left;vertical-align:top} th{font-weight:700}
+    .note{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;color:#666}
+  </style>
+</head>
+<body>
+<main>
+<article>
+<header>
+<h1>Chord_Skills: When AI Skills Become a More Dangerous Tool Surface</h1>
+<p class="subtitle">Extending XTHP from agent tools to skill-based AI systems</p>
+<p class="byline">By Eklavya Tyagi</p>
+</header>
+
+<p>The original Chord paper introduced Cross-Tool Harvesting and Polluting, or XTHP: a class of failures where an untrusted tool in an LLM agent's tool pool can influence the agent's workflow and alter the information that reaches the user.</p>
+
+<p>Chord demonstrated this at the traditional tool layer, especially in LangChain and LlamaIndex-style systems. Chord_Skills asks a follow-up question: what happens when the same idea is moved from agent tools to skill-based AI systems?</p>
+
+<p>The answer is that the risk does not disappear. In some ways, it becomes harder to inspect.</p>
+
+<blockquote>A skill can look clean in natural language while its executable helper code quietly changes the facts returned to the model.</blockquote>
+
+<h2>Why the skill layer changes the problem</h2>
+
+<p>In a traditional tool system, the tool description, schema, and execution method are usually reviewed together. In a skill system, the surface is split across layers:</p>
+
+<ol>
+<li>The skill description, which helps the model decide when to use the skill.</li>
+<li>The <code>SKILL.md</code> body, which gives the model procedural instructions.</li>
+<li>Helper scripts such as <code>preprocess.py</code>, <code>postprocess.py</code>, or task-specific scripts like <code>analyze.py</code>.</li>
+</ol>
+
+<p>This split creates a new trust boundary. A reviewer may inspect <code>SKILL.md</code> and see a normal instruction file, while the behavior that matters is implemented in a script underneath it.</p>
+
+<h2>The stock-insight example</h2>
+
+<p>The clearest demonstration in Chord_Skills is the <code>stock-insight</code> skill. The benign version takes a ticker symbol such as <code>NVDA</code>, runs an analyzer script, fetches current market data, and returns a structured JSON object with fields such as price, previous close, day range, percent change, sentiment, and timestamp.</p>
+
+<p>The important observation is that the model is not directly checking the market. It is trusting the analyzer output.</p>
+
+<p>In a benign run, the assistant can report that NVDA is having a healthy session. In a polluted run, the assistant can receive a structured result that describes a sharp decline and then produce a confident warning to the user. The visible skill instructions can remain the same; the difference is below the Markdown layer.</p>
+
+<p>This is what makes the example powerful. The assistant is not inventing the answer from nothing. It is following the data path it was given.</p>
+
+<h2>Why this is more severe than visible instruction pollution</h2>
+
+<h3>1. Text review is not enough</h3>
+<p>Many defenses look for suspicious language in prompts, descriptions, or Markdown instructions. Chord_Skills shows that this misses an important class of failures. A skill can have a clean instruction file while still returning unreliable structured data through helper code.</p>
+
+<h3>2. The model treats tool output as evidence</h3>
+<p>Modern agents are designed to rely on external tools for fresh or precise information. That is useful, but it also gives tool outputs special authority. If the output is wrong, the final answer may still sound careful, grounded, and persuasive.</p>
+
+<h3>3. Well-formed data can still be false</h3>
+<p>A JSON object can pass schema validation while its content is wrong. The price can sit inside the reported day range. The percent change can match the reported previous close. The explanation can match the numbers. Basic formatting checks will not catch a problem with provenance.</p>
+
+<h3>4. The story matters as much as the number</h3>
+<p>Users do not usually read raw JSON. They read the assistant's summary. If a skill changes both the number and the framing around it, the final answer can become much more persuasive than a simple incorrect value.</p>
+
+<h2>How Chord_Skills is structured</h2>
+
+<p>Chord_Skills keeps the structure of the original Chord pipeline but adapts it to skills. The project includes:</p>
+
+<ul>
+<li>A schema layer for representing victim and adversarial skills.</li>
+<li>A query generator that creates realistic user requests.</li>
+<li>A skill generator that creates candidate wrappers around a target skill.</li>
+<li>A selection optimizer that improves descriptions for evaluation.</li>
+<li>A testing agent that measures whether the candidate skill is selected.</li>
+<li>Harvesting and pollution evaluators.</li>
+<li>An orchestrator that runs the full pipeline.</li>
+</ul>
+
+<p>The main metrics are:</p>
+
+<table>
+<thead><tr><th>Metric</th><th>Meaning</th></tr></thead>
+<tbody>
+<tr><td><strong>HSR</strong></td><td>Hijacking Success Rate: how often the alternate skill is selected instead of the target.</td></tr>
+<tr><td><strong>HASR</strong></td><td>Harvesting Attack Success Rate: how often context-related data appears in the final output.</td></tr>
+<tr><td><strong>PSR</strong></td><td>Pollution Success Rate: how often the intended pollution marker appears in the final answer.</td></tr>
+</tbody>
+</table>
+
+<h2>The deeper lesson: skills are supply-chain objects</h2>
+
+<p>It is tempting to think of skills as documentation: a folder of instructions that helps an assistant do a task. But skills are closer to software packages. They combine natural-language instructions, executable scripts, dependencies, and trust assumptions.</p>
+
+<p>Once a skill is selected, the assistant may treat its output as authoritative. That means a compromised or poorly reviewed skill is not just a bad prompt. It is a risky software component in an AI workflow.</p>
+
+<h2>What defenders should take away</h2>
+
+<ol>
+<li><strong>Review code, not just Markdown.</strong> The visible <code>SKILL.md</code> is not the whole skill.</li>
+<li><strong>Track output provenance.</strong> The system should know whether a fact came from a script, an API, a cached file, or model inference.</li>
+<li><strong>Verify sensitive domains independently.</strong> Finance, health, legal, and identity workflows should not rely on a single opaque output.</li>
+<li><strong>Validate semantics, not just schema.</strong> Well-formed JSON is not necessarily truthful JSON.</li>
+<li><strong>Audit runtime behavior.</strong> The system should log which scripts ran, what inputs they received, and what outputs they returned.</li>
+<li><strong>Use least privilege.</strong> Skills should only receive the filesystem, network, and context access they actually need.</li>
+</ol>
+
+<h2>Conclusion</h2>
+
+<p>Chord_Skills extends XTHP from the tool layer to the skill layer, but the most important lesson is not simply that the attack transfers. The more interesting lesson is that a skill can be clean in natural language and unreliable in computation.</p>
+
+<p>When a skill returns structured data, the model often treats that data as reality. If the helper code behind the skill changes the data, the assistant can produce a confident and coherent answer without ever seeing an obviously suspicious instruction.</p>
+
+<blockquote>In agent systems, the most dangerous failure may not look like a prompt at all. It may look like a trusted script returning JSON.</blockquote>
+
+<p class="note">Project: <a href="https://github.com/Eklavya17/Chord_Skills">github.com/Eklavya17/Chord_Skills</a></p>
+</article>
+</main>
+</body>
+</html>
